@@ -33,48 +33,45 @@ export default class Hand extends React.Component {
     return value;
   }
   
-  getScore = () => {
+  getScore = (hand) => {
     let score = 0;
     let i = 0;
-    while(i < this.props.hand.length) {
-      score += this.convertScore(this.props.hand[i]);
+    while(i < hand.length) {
+      score += this.convertScore(hand[i]);
       i++;
     }
-    if(this.props.hand.includes('sa') && score > 21) {
+    if(hand.includes('sa') && score > 21) {
       score -= 10;
     }
-    if(this.props.hand.includes('ca') && score > 21) {
+    if(hand.includes('ca') && score > 21) {
       score -= 10;
     }
-    if(this.props.hand.includes('ha') && score > 21) {
+    if(hand.includes('ha') && score > 21) {
       score -= 10;
     }
-    if(this.props.hand.includes('da') && score > 21) {
+    if(hand.includes('da') && score > 21) {
       score -= 10;
     }
-
-    if(this.props.type == 'play') {
-      this.props.score(score, 'play');
-    } else {
-      this.props.score(score, 'comp');
-    }
-    
     return score;
   }
 
   addCards = () => {
-    let hand = this.props.hand.map((card) => <Card card={card} dropped={this.props.dropped} pos={`${this.props.hand.indexOf(card) * 20}%`} key={this.props.hand.indexOf(card)} />);
-    if (hand.length > 2 && !this.props.turnComplete) {
-      hand = hand.slice(0, hand.length - 1);
-    }
+    let hand = this.props.hand.map((card) => 
+      <Card 
+        card={card} 
+        dropped={this.props.dropped} 
+        pos={`${this.props.hand.indexOf(card) * 20}%`} 
+        key={this.props.hand.indexOf(card)} 
+      />
+    );
     return hand;
   }
 
   render() {
     return (
-      <View style={styles.container}>
+      <View style={styles.container}> 
         {this.addCards()}
-        <Text style={{position: 'absolute', bottom:'0%', color: 'white'}}>{this.getScore()}</Text> 
+        <Text style={{position: 'absolute', bottom:'0%', color: 'white'}}>{this.getScore(this.props.hand)}</Text> 
       </View>
     );
   }
@@ -84,7 +81,7 @@ const styles = StyleSheet.create({
   container: {
 		flex: 1,
     width: '100%',
-    height: '33%',
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'flex-start',
 		flexDirection: 'column',

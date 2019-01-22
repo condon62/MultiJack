@@ -33,15 +33,8 @@ export default class Card extends React.Component {
       onPanResponderRelease: (e, gesture) => {
         this.state.pan.flattenOffset();
         if (this.isDropArea(gesture)) {
-          this.props.dropped(true);
-          Animated.timing(this.state.opacity, {
-          toValue: 0,
-          duration: 1000
-          }).start(() =>
-            this.setState({
-              showDraggable: false
-            })
-          );
+          let dropArea = this.getDropArea(gesture);
+          this.props.dropArea(dropArea);
         } else {
           Animated.spring(this.state.pan, {
             toValue: { x: 0, y: 0 },
@@ -52,12 +45,28 @@ export default class Card extends React.Component {
     });
   }
 
+  getDropArea(gesture) {
+    const start = 40;
+    const end = 340;
+    const interval = 300 / this.props.hands;
+    let dropArea = this.props.hands + 1;
+
+    let i = 1; // Initialize dropzone
+    while (i <= this.props.hands && dropArea == this.props.hands + 1) { // For all drop zones
+      current = start + interval * i; // Current dropzone upper extreme
+      if (gesture.moveX < current) { // If x position in current dropzone
+        dropArea = i;
+      }
+      i++;
+    }
+    return dropArea;
+  }
+
   isDropArea(gesture) {
-    return gesture.moveY < 700 && gesture.moveY > 500;
+    return (gesture.moveY < 700 && gesture.moveY > 500 && gesture.moveX < 340 && gesture.moveX > 40);// In the legal dropzone
   }
   
   render() {
-
     let { pan } = this.state;
     let [translateX, translateY] = [pan.x, pan.y];
     let imageStyle = {transform: [{translateX}, {translateY}]};
