@@ -17,6 +17,7 @@ export default class Set extends React.Component {
         type={this.props.type}
         turnComplete={this.props.turnComplete}
         index={this.props.set.indexOf(hand)}
+        endRound={this.props.endRound}
         key={this.props.set.indexOf(hand)}
       />
     );

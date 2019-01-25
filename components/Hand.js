@@ -17,9 +17,10 @@ export default class Hand extends React.Component {
         card={card} 
         type={this.props.type}
         dropped={this.props.dropped} 
-        pos={`${this.props.hand.indexOf(card) * 20}%`} 
+        pos={this.props.hand.indexOf(card)} 
         locked={true}
         score={score}
+        endRound={this.props.endRound}
         key={this.props.hand.indexOf(card)} 
       />
     );
@@ -27,21 +28,23 @@ export default class Hand extends React.Component {
   }
 
   busted = (score) => {
-    if (score > 21) {
+    if (score > 21 && (this.props.type == 'play' || this.props.endRound)) {
       return <Text style={styles.busted}>BUSTED</Text>;
     }
   }
 
   score = (score) => {
-    if (score > 21) {
-      return (
-        <Text style={{position: 'absolute', bottom:'0%'}}>
-          <Text style={{position: 'absolute', bottom:'0%', color: 'white', opacity: 0.4, textDecorationLine: 'line-through'}}>{score}</Text> 
-          <Text style={{position: 'absolute', bottom:'0%', color: 'red'}}>(-10)</Text> 
-        </Text>
-      );
-    } else {
-      return <Text style={{position: 'absolute', bottom:'0%', color: 'white'}}>{score}</Text>;
+    if (this.props.endRound || this.props.type == 'play') {
+      if (score > 21) {
+        return (
+          <Text style={{position: 'absolute', bottom:'0%'}}>
+            <Text style={{position: 'absolute', bottom:'0%', color: 'white', opacity: 0.4, textDecorationLine: 'line-through'}}>{score}</Text> 
+            <Text style={{position: 'absolute', bottom:'0%', color: 'red'}}>(-10)</Text> 
+          </Text>
+        );
+      } else {
+        return <Text style={{position: 'absolute', bottom:'0%', color: 'white'}}>{score}</Text>;
+      }
     }
   }
 

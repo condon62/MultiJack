@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, Image, Button } from 'react-native';
+import { StyleSheet, Text, View, Image, Button, Alert } from 'react-native';
 import helpers from '../helpers';
 import images from '../assets/images/images.js';
 import Set from './Set';
@@ -36,6 +36,8 @@ export default class Game extends React.Component {
       i++
     }
 
+    let playersTurn = (Math.floor(Math.random() * 2) == 0);
+
 		this.state = {
       deck: deck, // Remaining cards
       playerSet: playerSet, // Set of player hands
@@ -43,7 +45,10 @@ export default class Game extends React.Component {
       card: '', // flipped card
       playerScore: 0,
       computerScore: 0,
+      lastRoundScore: 0,
       hit: false,
+      playersTurn: playersTurn,
+      stayCounter: 0,
     };
   }
 
@@ -72,41 +77,87 @@ export default class Game extends React.Component {
       computerSet.push(computerHand);
       i++
     }
+
+    let playersTurn = (Math.floor(Math.random() * 2) == 0);
     
     this.setState({
       deck: updatedDeck,
       playerSet: playerSet,
       computerSet: computerSet,
-      hit: false
+      lastRoundScore: 0,
+      hit: false,
+      playersTurn: playersTurn,
+      stayCounter: 0,
     });
   }
 
 	addCard = (set) => {
-    let updatedDeck = this.state.deck;
-    let card = updatedDeck.pop();
-    
+    let { deck, computerSet, playersTurn } = this.state;
+    let hit = true;
+    let card = deck.pop();
+    if (!playersTurn) {
+      computerSet = this.computerSelect(computerSet, card);
+      playersTurn = true;
+      hit = false;
+    }
     this.setState({
       card: card,
-      hit: true,
-      deck: updatedDeck,
+      hit: hit,
+      deck: deck,
+      computerSet: computerSet,
+      playersTurn: playersTurn,
+      stayCounter: 0
     });
   }
 
+  computerSelect = (set, card) => {
+    let cardValue = convertScore(card);
+    let best = -100;
+    let index = 0;
+    console.log(cardValue);
+    let i = 0;
+    while (i < set.length) {
+      // TODO: IF GETSCORE() SCORE IS 11 i.e. an ACE
+      let score = 21 - getScore(set[i]) - cardValue;
+      if ((best < 0 && score > best) || (best > 0 && score > 0 && score < best)) {
+        best = score;
+        index = i;
+      }
+      console.log(score);
+      i++;
+    }
+    set[index].push(card)
+    return set;
+  }
+
   cardDropped = (zone) => {
-    let { playerSet, card } = this.state; 
+    let { playerSet, card, playersTurn } = this.state; 
     let hand = playerSet[zone - 1];
     hand.push(card);
     playerSet[zone - 1] = hand;
     playerSet
     this.setState({
       playerSet: playerSet,
-      hit: false
+      hit: false,
+      playersTurn: !playersTurn
     });
   }
  
   stay = () => {
-    this.updateScore();
-    this.initializeHands();
+    let { playersTurn, stayCounter } = this.state;
+    if (stayCounter == 1) { // End game
+      this.setState({
+        stayCounter: stayCounter + 1,
+      });
+      this.updateScore();
+      //this.initializeHands();
+    } else { // End turn
+      console.log('end turn');
+      this.setState({
+        playersTurn: !playersTurn,
+        stayCounter: stayCounter + 1,
+      });
+    }
   }
 
   flipCard = (card) => {
@@ -148,44 +199,73 @@ export default class Game extends React.Component {
     let i = 0;
     let player = 0;
     let computer = 0;
+    let pScores = [];
+    let cScores = [];
     while (i < playerSet.length) {
-      playerSet[i] = getScore(playerSet[i]);
-      if (playerSet[i] > 21) {
-        playerSet[i] = -10;
+      pScores[i] = getScore(playerSet[i]);
+      if (pScores[i] > 21) {
+        pScores[i] = -10;
       }
-      computerSet[i] = getScore(computerSet[i]);
-      if (computerSet[i] > 21) {
-        computerSet[i] = -10;
+      cScores[i] = getScore(computerSet[i]);
+      if (cScores[i] > 21) {
+        cScores[i] = -10;
       }
       i++;
     }
 
-    playerSet.sort((a, b) => a - b);
-    computerSet.sort((a, b) => a - b);
+    pScores.sort((a, b) => a - b);
+    cScores.sort((a, b) => a - b);
 
     let j = 0;
-    while (j < playerSet.length) {
-      if (playerSet[j] == -10) {
+    while (j < pScores.length) {
+      if (pScores[j] == -10 && cScores[j] == -10){
+        player += 0;
+      } else if (pScores[j] == -10) {
         player -= 10;
-      } else if (computerSet[j] == -10) {
+      } else if (cScores[j] == -10) {
         computer -= 10;
-      } else if (playerSet[j] > computerSet[j]) {
-        player += playerSet[j] - computerSet[j];
+      } else if (pScores[j] > cScores[j]) {
+        player += pScores[j] - cScores[j];
       } else {
-        computer += computerSet[j] - playerSet[j];
+        computer += cScores[j] - pScores[j];
       }
       j++;
     }
 
+    let lastRoundScore = 0;
+    let title = '';
+    let message = '';
+
     if (player > computer) {
       playerScore += player - computer;
-    } else {
+      lastRoundScore = player - computer;
+      title = 'Round Won';
+      message = 'Player Wins by ' + (player - computer);
+    } else if (computer > player) {
       computerScore += computer - player;
+      lastRoundScore = computer - player;
+      title = 'Round Lost';
+      message = 'Computer wins by ' + (computer - player);
+    } else {
+      title = 'Draw';
+      message = 'Player and Computer tie'
+    }
+
+    if (playerScore < 50 && computerScore < 50) {
+      Alert.alert(
+        title,
+        message,
+        [
+          {Text: 'Next Round', onPress: () => this.initializeHands()}
+        ],
+        { cancelable: false }
+      );
     }
     
     this.setState({
       playerScore: playerScore,
       computerScore: computerScore,
+      lastRoundScore: lastRoundScore
     });
   }
 
@@ -205,9 +285,94 @@ export default class Game extends React.Component {
     }
     return busted;
   }
+
+  turnIndicator = () => {
+    if (this.state.playersTurn) {
+      return (
+        <View style={{alignSelf: 'center', position: 'absolute', bottom: 250}}>
+          <Text style={{color: 'yellow'}}>Player &#x2193; Turn</Text>
+        </View>
+      );
+    } else {
+      return (
+        <View style={{alignSelf: 'center', position: 'absolute', top: 250}}>
+          <Text style={{color: 'yellow'}}>Computer &#x2191; Turn</Text>
+        </View>
+      );
+    }
+  }
+
+  computersAction = () => {
+    let { computerSet } = this.state;
+    let scores = [];
+    let i = 0;
+    while (i < computerSet.length) {
+      scores[i] = getScore(computerSet[i]);
+      i++;
+    } 
+    scores.sort((a, b) => a - b);
+    if (scores[0] <= 13) {
+      this.addCard();
+    } else {
+      this.stay();
+    }
+  }
+
+
+  componentDidUpdate() {
+    if (!this.state.playersTurn) {
+      // let stay = this.stay;
+      // setTimeout(function (stay) {
+      //       console.log('VIDEO HAS STOPPED');
+      //       stay();
+      // }, 2000);
+      // console.log('test');
+      this.computersAction();
+    }
+
+  }
+
+  componentDidMount() {
+    if (!this.state.playersTurn) {
+      // let stay = this.stay;
+      // setTimeout(function (stay) {
+      //       console.log('VIDEO HAS STOPPED');
+      //       stay();
+      // }, 2000);
+      // console.log('test');
+      this.computersAction();
+    }
+  }
+
+  gameOver = () => {
+    let { playerScore, computerScore, lastRoundScore } = this.state;
+    if (playerScore >= 50) {
+      Alert.alert(
+        'Game Won',
+        `Player wins round by a score of ${lastRoundScore} with a score of ${playerScore}`,
+        [
+          {Text: 'Home', onPress: () => this.quit()}
+        ],
+        { cancelable: false }
+      );
+    }
+    if (computerScore >= 50) {
+      Alert.alert(
+        'Game Lost',
+        `Computer wins round by a score of ${lastRoundScore} and game with a score of ${computerScore}`,
+        [
+          {Text: 'Home', onPress: () => this.quit()}
+        ],
+        { cancelable: false }
+      );
+    }
+  }
   
   render() {
     let { playerSet, computerSet } = this.state;
+    console.log(this.state.stayCounter);
+    console.log('p: ' + playerSet);
+    console.log('c: ' + computerSet);
     return (
       <View style={styles.container}>
         <Set 
@@ -215,6 +380,7 @@ export default class Game extends React.Component {
           type='comp'
           turnComplete={!this.state.hit}
           numHands={this.props.hands}
+          endRound={this.state.stayCounter >= 2}
         />
         <View style={styles.pannel}>
           <View style={{width: '40%', flexDirection: 'row',}}>
@@ -223,7 +389,7 @@ export default class Game extends React.Component {
                 onPress={() => {this.addCard(playerSet)}}
                 title='Hit'
                 color='red'
-                disabled={this.playerBusted() || this.state.hit}
+                disabled={this.playerBusted() || this.state.hit || !this.state.playersTurn}
               />
               <Button
                 onPress={() => {this.stay()}}
@@ -252,6 +418,8 @@ export default class Game extends React.Component {
           turnComplete={!this.state.hit}
           numHands={this.props.hands}
         />
+        {/* {this.turnIndicator()} */}
+        {this.gameOver()}
         {this.flipCard(this.state.card)}
       </View>
     );
@@ -259,6 +427,7 @@ export default class Game extends React.Component {
 }
 
 const styles = StyleSheet.create({
+
   container: {
 		flex: 1,
 		flexDirection: 'column',
@@ -290,4 +459,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 35,
   },
+
 });

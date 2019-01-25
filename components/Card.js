@@ -70,24 +70,24 @@ export default class Card extends React.Component {
 
   isAnimated = () => {
     if (this.props.locked == true) {
-      if (this.props.type == 'play') {
-        if (this.props.score > 21) {
+      if (this.props.type == 'play' || this.props.pos > 1 || this.props.endRound) {
+        if (this.props.score > 21 && (this.props.type == 'play' || this.props.endRound)) {
           return (
             <View>
-              <Image source={images[this.props.card]} style={{top: this.props.pos, opacity: 0.5}} />
+              <Image source={images[this.props.card]} style={{top: `${this.props.pos * 20}%`, opacity: 0.5}} />
             </View>
           );
         } else {
           return (
             <View>
-              <Image source={images[this.props.card]} style={{top: this.props.pos}} />
+              <Image source={images[this.props.card]} style={{top: `${this.props.pos * 20}%`}} />
             </View>
           );
         }
       } else {
         return (
           <View>
-            <Image source={require('../assets/images/back.jpg')} style={{top: this.props.pos,}} />
+            <Image source={require('../assets/images/back.jpg')} style={{top: `${this.props.pos * 20}%`,}} />
           </View>
         );
       }
