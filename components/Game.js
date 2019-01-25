@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, Image, Button } from 'react-native';
-import helpers from './helpers';
-import images from './assets/images/images.js';
+import helpers from '../helpers';
+import images from '../assets/images/images.js';
 import Set from './Set';
 import Card from './Card';
 
@@ -113,10 +113,13 @@ export default class Game extends React.Component {
     if(this.state.hit) {
       return (
         <Card 
-          card={card} 
+          card={card}
+          type={'play'} 
           dropArea={(zone) => this.cardDropped(zone)} 
           pos={0} 
+          locked={false}
           hands={this.props.hands}
+          zones={this.legalZones()}
         />
       );
     } else {
@@ -124,28 +127,57 @@ export default class Game extends React.Component {
     }
   }
 
+  legalZones = () => {
+    let { playerSet } = this.state;
+    let zones = [];
+    let i = 0;
+    while (i < playerSet.length) {
+      if (getScore(playerSet[i]) > 21) {
+        zones[i] = false;
+      } else {
+        zones[i] = true;
+      }
+      i++;
+    }
+    return zones;
+  }
+
   updateScore = () => {
     let { playerScore, computerScore, playerSet, computerSet } = this.state;
+  
     let i = 0;
     let player = 0;
     let computer = 0;
-    while(i < playerSet.length) {
-      let currentPlayerScore = this.getScore(playerSet[i]);
-      let currentComputerScore = this.getScore(computerSet[i]);
-      if(currentPlayerScore > 21) {
-        player -= 10;
-      } else {
-        player += currentPlayerScore;
+    while (i < playerSet.length) {
+      playerSet[i] = getScore(playerSet[i]);
+      if (playerSet[i] > 21) {
+        playerSet[i] = -10;
       }
-      if(currentComputerScore > 21) { 
-        computer -= 10;
-      } else {
-        computer += currentComputerScore;
+      computerSet[i] = getScore(computerSet[i]);
+      if (computerSet[i] > 21) {
+        computerSet[i] = -10;
       }
       i++;
     }
 
-    if(player > computer) {
+    playerSet.sort((a, b) => a - b);
+    computerSet.sort((a, b) => a - b);
+
+    let j = 0;
+    while (j < playerSet.length) {
+      if (playerSet[j] == -10) {
+        player -= 10;
+      } else if (computerSet[j] == -10) {
+        computer -= 10;
+      } else if (playerSet[j] > computerSet[j]) {
+        player += playerSet[j] - computerSet[j];
+      } else {
+        computer += computerSet[j] - playerSet[j];
+      }
+      j++;
+    }
+
+    if (player > computer) {
       playerScore += player - computer;
     } else {
       computerScore += computer - player;
@@ -163,60 +195,15 @@ export default class Game extends React.Component {
 
   playerBusted = () => {
     let busted = true
-    console.log(this.state.playerSet);
     let { playerSet } = this.state;
-    // let { playerBusted } = this.state;
     let i = 0;
-    while(i < playerSet.length && busted == true) {
-      if(this.getScore(playerSet[i]) < 21) {
+    while (i < playerSet.length && busted == true) {
+      if (getScore(playerSet[i]) < 21) {
         busted = false;
       }
       i++;
     }
     return busted;
-  }
-
-  convertScore = (str) => {
-    let value = 0;
-    switch (str.substring(1)) {
-      case 'j':
-        value = 10;
-        break;
-      case 'q':
-        value = 10;
-        break;
-      case 'k':
-        value = 10;
-        break;
-      case 'a':
-        value = 11;
-        break;
-      default:
-        value = parseInt(str.substring(1));
-    }
-    return value;
-  }
-  
-  getScore = (hand) => {
-    let score = 0;
-    let i = 0;
-    while(i < hand.length) {
-      score += this.convertScore(hand[i]);
-      i++;
-    }
-    if(hand.includes('sa') && score > 21) {
-      score -= 10;
-    }
-    if(hand.includes('ca') && score > 21) {
-      score -= 10;
-    }
-    if(hand.includes('ha') && score > 21) {
-      score -= 10;
-    }
-    if(hand.includes('da') && score > 21) {
-      score -= 10;
-    }
-    return score;
   }
   
   render() {
@@ -249,14 +236,14 @@ export default class Game extends React.Component {
                 color='yellow'
               />
             </View>
-            <Image source={require('./assets/images/back.jpg')} />
+            <Image source={require('../assets/images/back.jpg')} />
           </View>
           <View style={{width: '20%'}}>
-            {this.flipCard(this.state.card)}
+            
           </View>
           <View style={styles.scoreboard}>
-            <Text style={{height: '25%', color: 'white'}}>{`Player Score: ${this.state.playerScore}`}</Text>
             <Text style={{height: '25%', color: 'white'}}>{`Computer Score: ${this.state.computerScore}`}</Text>
+            <Text style={{height: '25%', color: 'white'}}>{`Player Score: ${this.state.playerScore}`}</Text>
           </View>
         </View>
         <Set 
@@ -265,6 +252,7 @@ export default class Game extends React.Component {
           turnComplete={!this.state.hit}
           numHands={this.props.hands}
         />
+        {this.flipCard(this.state.card)}
       </View>
     );
   }
