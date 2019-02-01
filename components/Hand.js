@@ -37,13 +37,13 @@ export default class Hand extends React.Component {
     if (this.props.endRound || this.props.type == 'play') {
       if (score > 21) {
         return (
-          <Text style={{position: 'absolute', bottom:'0%'}}>
+          <Text style={{position: 'absolute', bottom:'0%', fontSize: 20}}>
             <Text style={{position: 'absolute', bottom:'0%', color: 'white', opacity: 0.4, textDecorationLine: 'line-through'}}>{score}</Text> 
             <Text style={{position: 'absolute', bottom:'0%', color: 'red'}}>(-10)</Text> 
           </Text>
         );
       } else {
-        return <Text style={{position: 'absolute', bottom:'0%', color: 'white'}}>{score}</Text>;
+        return <Text style={{position: 'absolute', bottom:'0%', color: 'white', fontSize: 20}}>{score}</Text>;
       }
     }
   }
