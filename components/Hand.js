@@ -21,6 +21,7 @@ export default class Hand extends React.Component {
         locked={true}
         score={score}
         endRound={this.props.endRound}
+        pass={this.props.pass}
         key={this.props.hand.indexOf(card)} 
       />
     );
@@ -28,13 +29,13 @@ export default class Hand extends React.Component {
   }
 
   busted = (score) => {
-    if (score > 21 && (this.props.type == 'play' || this.props.endRound)) {
+    if (!this.props.pass && score > 21 && (this.props.type == 'play' || this.props.endRound)) {
       return <Text style={styles.busted}>BUSTED</Text>;
     }
   }
 
   score = (score) => {
-    if (this.props.endRound || this.props.type == 'play') {
+    if ((this.props.endRound || this.props.type == 'play') && (!this.props.pass)) {
       if (score > 21) {
         return (
           <Text style={{position: 'absolute', bottom:'0%', fontSize: 20}}>

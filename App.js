@@ -65,6 +65,7 @@ export default class App extends React.Component {
       return (
         <Game 
           hands={this.state.hands}
+          players={this.state.players}
           quit={() => this.quit()}
         />
       );

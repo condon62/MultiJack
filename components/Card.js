@@ -70,7 +70,7 @@ export default class Card extends React.Component {
 
   isAnimated = () => {
     if (this.props.locked == true) {
-      if (this.props.type == 'play' || this.props.pos > 0 || this.props.endRound) {
+      if ((this.props.type == 'play' || this.props.pos > 0 || this.props.endRound) && !this.props.pass) {
         if (this.props.score > 21 && (this.props.type == 'play' || this.props.endRound)) {
           return (
             <View>
