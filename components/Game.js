@@ -5,8 +5,15 @@ import images from '../assets/images/images.js';
 import Set from './Set';
 import Card from './Card';
 
+const TIMERLENGTH = 5;
+const DECK = ['c2', 'd2', 'h2', 's2', 'c3', 'd3', 'h3', 's3', 'c4', 'd4', 'h4', 's4', 'c5', 'd5', 'h5', 's5',
+'c6', 'd6', 'h6', 's6', 'c7', 'd7', 'h7', 's7', 'c8', 'd8', 'h8', 's8', 'c9', 'd9', 'h9', 's9',
+'c10', 'd10', 'h10', 's10', 'cj', 'dj', 'hj', 'sj', 'cq', 'dq', 'hq', 'sq', 'ck', 'dk', 'hk', 'sk',
+'ca', 'da', 'ha', 'sa'];
+
 export default class Game extends React.Component {
-  
+  mounted = false;
+
   constructor(props) {
     super(props);
 
@@ -47,16 +54,50 @@ export default class Game extends React.Component {
       computerScore: 0,
       lastRoundScore: 0,
       hit: false,
+      stay: false,
       playersTurn: playersTurn,
       stayCounter: 0,
       pass: true,
+      computerTimer: TIMERLENGTH,
+      gameOver: false,
     };
   }
+
+  //----------------------------------------------------------------//
+  // Lifecycle methods
+
+  componentDidMount() {
+    this.mounted = true;
+    if (this.state.playersTurn && this.props.hands == 1 && this.props.players == 1) {
+      this.automatePlayer();
+    }
+    if (this.props.players == 1) {
+      this.computersTurn();
+    }
+  }
+
+  componentDidUpdate() {
+    this.gameOver();
+    if (this.state.playersTurn && this.props.hands == 1 && this.props.players == 1) {
+      this.automatePlayer();
+    }
+    if (this.props.players == 1) {
+      this.computersTurn();
+    }
+  }
+
+  componentWillUnmount() {
+    this.mounted = false;
+  }
+
+  //----------------------------------------------------------------//
+  // General game methods
 
   addCard = (set) => {
     let { deck, playerSet, computerSet, playersTurn } = this.state;
     let { players } = this.props;
     let hit = true;
+    let computerTimer = TIMERLENGTH;
     let card = deck.pop();
     if (this.props.hands == 1 && players == 1) {
       if (playersTurn) {
@@ -67,111 +108,49 @@ export default class Game extends React.Component {
       playersTurn = !playersTurn;
       hit = false
     } else if (!playersTurn && players == 1) {
-      computerSet = this.computerSelect(computerSet, card);
-      playersTurn = true;
-      hit = false;
+      computerTimer = 2;
     }
     this.setState({
       card: card,
       hit: hit,
+      stay: false,
       deck: deck,
       playerSet: playerSet,
       computerSet: computerSet,
       playersTurn: playersTurn,
-      stayCounter: 0
+      stayCounter: 0,
+      computerTimer: computerTimer,
     });
-  }
-
-  cardDropped = (zone) => {
-    let { playerSet, computerSet, card, playersTurn } = this.state; 
-    let hand = [];
-    if (!playersTurn && this.props.players == 2) {
-      hand = computerSet[zone - 1];
-      hand.push(card);
-      computerSet[zone - 1] = hand;
-    } else {
-      hand = playerSet[zone - 1];
-      hand.push(card);
-      playerSet[zone - 1] = hand;
-    }
-    this.setState({
-      playerSet: playerSet,
-      computerSet: computerSet,
-      hit: false,
-      playersTurn: !playersTurn,
-      pass: true,
-    });
-  }
-
-  componentDidMount() {
-    if (!this.state.playersTurn && this.props.players == 1) {
-      this.computersAction();
-    }
-  }
-
-  componentDidUpdate() {
-    if (!this.state.playersTurn && this.props.players == 1) {
-      this.computersAction();
-    }
-
-  }
-
-  computersAction = () => {
-    let { computerSet } = this.state;
-    let scores = [];
-    let i = 0;
-    while (i < computerSet.length) {
-      scores[i] = getScore(computerSet[i]);
-      i++;
-    } 
-    scores.sort((a, b) => a - b);
-    if (scores[0] <= 13) {
-      this.addCard();
-    } else {
-      this.stay();
-    }
-  }
-
-  computerSelect = (set, card) => {
-    let cardValue = convertScore(card);
-    let best = -100;
-    let index = 0;
-    let i = 0;
-    while (i < set.length) {
-      // TODO: IF GETSCORE() SCORE IS 11 i.e. an ACE
-      let score = 21 - getScore(set[i]) - cardValue;
-      if ((best < 0 && score > best) || (best > 0 && score > 0 && score < best)) {
-        best = score;
-        index = i;
-      }
-      i++;
-    }
-    set[index].push(card)
-    return set;
   }
 
   flipCard = (card) => {
-    if(this.state.hit) {
+    if (this.state.hit) {
+      let locked = false;
+      if (!this.state.playersTurn && this.props.players == 1) {
+        locked = true;
+      }
       return (
         <Card 
           card={card}
           type={'play'} 
           dropArea={(zone) => this.cardDropped(zone)} 
-          pos={10} 
-          locked={false}
+          pos={0} 
+          locked={locked}
           hands={this.props.hands}
           zones={this.legalZones()}
           pass={this.props.players == 2 ? this.state.pass : false}
         />
       );
+    } else if (this.state.stay) {
+      return <Text style={{fontSize: 20, color: 'white', backgroundColor: 'blue'}}>STAY</Text>;
     } else {
       return null;
     }
   }
 
   gameOver = () => {
-    let { playerScore, computerScore, lastRoundScore } = this.state;
-    if (playerScore >= 50) {
+    let { playerScore, computerScore, lastRoundScore, gameOver } = this.state;
+    if (playerScore >= 50 && !gameOver) {
       let title = 'Game Won';
       let message = `Player wins round by a score of ${lastRoundScore} with a score of ${playerScore}`;
       if (this.props.players == 2) {
@@ -186,8 +165,11 @@ export default class Game extends React.Component {
         ],
         { cancelable: false }
       );
+      this.setState({
+        gameOver: true,
+      });
     }
-    if (computerScore >= 50) {
+    if (computerScore >= 50 && !gameOver) {
       let title = 'Game Lost';
       let message = `Computer wins round by a score of ${lastRoundScore} and game with a score of ${computerScore}`;
       if (this.props.players == 2) {
@@ -202,6 +184,9 @@ export default class Game extends React.Component {
         ],
         { cancelable: false }
       );
+      this.setState({
+        gameOver: true,
+      });
     }
   }
 
@@ -239,68 +224,37 @@ export default class Game extends React.Component {
       computerSet: computerSet,
       lastRoundScore: 0,
       hit: false,
+      stay: false,
       playersTurn: playersTurn,
       stayCounter: 0,
       pass: true,
+      computerTimer: TIMERLENGTH,
+      gameOver: false,
     });
   }
 
-  legalZones = () => {
-    let { playerSet, computerSet, playersTurn } = this.state;
-    let { players } = this.props;
-    let temp = [];
-    if (!playersTurn && this.props.players == 2) {
-      temp = playerSet;
-      playerSet = computerSet;
-      computerSet = temp;
-    }
-    let zones = [];
-    let i = 0;
-    while (i < playerSet.length) {
-      if (getScore(playerSet[i]) > 21) {
-        zones[i] = false;
-      } else {
-        zones[i] = true;
-      }
-      i++;
-    }
-    return zones;
-  }
-
-  passDevice = () => {
-    let { players } = this.props;
-    let { playersTurn, pass } = this.state;
-    if (players == 2 && pass) {
-      Alert.alert(
-        `Player ${playersTurn ? 1 : 2}'s Turn`,
-        `Pass device to player ${playersTurn ? 1 : 2}`,
-        [
-          {Text: 'Start Turn', onPress: () => this.passed()}
-        ],
-        { cancelable: false }
-      );
-    }
-  }
-
-  passed = () => {
-    this.setState({
-      pass: false,
-    });
-  }
- 
   stay = () => {
-    let { playersTurn, stayCounter } = this.state;
+    let { playersTurn, stayCounter, computerTimer, stay } = this.state;
+    if (playersTurn) {
+      computerTimer = TIMERLENGTH;
+      stay = false;
+    } else {
+      computerTimer = 0;
+      stay = true;
+    }
     if (stayCounter == 1) { // End game
       this.setState({
         stayCounter: stayCounter + 1,
+        computerTimer: computerTimer,
       });
       this.updateScore();
-      //this.initializeHands();
     } else { // End turn
       this.setState({
         playersTurn: !playersTurn,
         stayCounter: stayCounter + 1,
         pass: true,
+        computerTimer: computerTimer,
+        stay: stay,
       });
     }
   }
@@ -396,6 +350,132 @@ export default class Game extends React.Component {
     });
   }
 
+  quit = () => {
+    clearInterval(this.computerTimer);
+    this.props.quit();
+  }
+
+  playerIndicator = () => {
+    if (this.props.players == 1) {
+      if (this.state.playersTurn) {
+        return (
+          <View style={{justifyContent: 'center', flex: 0.25}}>
+            <View style={[styles.triangle, {borderTopColor: 'blue', borderBottomColor: 'transparent'}]}/>
+          </View>
+          // <View style={{alignSelf: 'center', position: 'absolute', bottom: 250}}>
+          //   <Text style={{color: 'yellow', fontSize: 20}}>Player &#x2193; Turn</Text>
+          // </View>
+        );
+      }
+    }
+  }
+
+  computerIndicator = () => {
+    if (this.props.players == 1) {
+      if (!this.state.playersTurn) {
+        return (
+          <View style={{justifyContent: 'center', flex: 0.25}}>
+            <View style={[styles.triangle, {borderTopColor: 'transparent', borderBottomColor: 'blue' }]}/>
+          </View>
+          // <View style={{alignSelf: 'center', position: 'absolute', top: 250}}>
+          //   <Text style={{color: 'yellow', fontSize: 20}}>Computer &#x2191; Turn</Text>
+          // </View>
+        );
+      }
+    }
+  }
+
+  turnIndicator = () => {
+    if (this.props.players == 1) {
+      if (!this.state.playersTurn) {
+        return (
+          <View style={{alignSelf: 'center', position: 'absolute', top: '37%'}}>
+            <Text style={{color: 'yellow', fontSize: 20}}>Computer &#x2191; Turn</Text>
+          </View>
+        );
+      } else {
+        return (
+          <View style={{alignSelf: 'center', position: 'absolute', bottom: '37%'}}>
+            <Text style={{color: 'yellow', fontSize: 20}}>Player &#x2193; Turn</Text>
+          </View>
+        );
+      }
+    }
+  }
+  
+  //----------------------------------------------------------------//
+  // Player methods
+
+  automatePlayer = () => {
+    if (getScore(this.state.playerSet[0]) >= 21) {
+      this.stay();
+    }
+  }
+
+  cardDropped = (zone) => {
+    let { playerSet, computerSet, card, playersTurn } = this.state; 
+    let hand = [];
+    if (!playersTurn && this.props.players == 2) {
+      hand = computerSet[zone - 1];
+      hand.push(card);
+      computerSet[zone - 1] = hand;
+    } else {
+      hand = playerSet[zone - 1];
+      hand.push(card);
+      playerSet[zone - 1] = hand;
+    }
+    this.setState({
+      playerSet: playerSet,
+      computerSet: computerSet,
+      hit: false,
+      playersTurn: !playersTurn,
+      pass: true,
+    });
+  }
+
+  legalZones = () => {
+    let { playerSet, computerSet, playersTurn } = this.state;
+    let { players } = this.props;
+    let temp = [];
+    if (!playersTurn && this.props.players == 2) {
+      temp = playerSet;
+      playerSet = computerSet;
+      computerSet = temp;
+    }
+    let zones = [];
+    let i = 0;
+    while (i < playerSet.length) {
+      if (getScore(playerSet[i]) > 21) {
+        zones[i] = false;
+      } else {
+        zones[i] = true;
+      }
+      i++;
+    }
+    return zones;
+  }
+
+  passDevice = () => {
+    let { players } = this.props;
+    let { playersTurn, pass } = this.state;
+    if (players == 2 && pass) {
+      Alert.alert(
+        `Player ${playersTurn ? 1 : 2}'s Turn`,
+        `Pass device to player ${playersTurn ? 1 : 2}`,
+        [
+          {Text: 'Start Turn', onPress: () => this.passed()}
+        ],
+        { cancelable: false }
+      );
+    }
+  }
+
+  passed = () => {
+    this.setState({
+      pass: false,
+    });
+  }
+
   playerBusted = () => {
     let busted = true
     let { playerSet, computerSet, playersTurn } = this.state;
@@ -415,25 +495,156 @@ export default class Game extends React.Component {
     return busted;
   }
 
-  quit = () => {
-    this.props.quit();
+  //----------------------------------------------------------------//
+  // Computer methods
+
+  computerShouldHit = (scores) => {
+    let { deck } = this.state;
+    let { difficulty } = this.props;
+    let hit = false;
+    if (difficulty == 1) {
+      if (Math.floor(Math.random() * 2) == 0) {
+        hit = true;
+      }
+    } else if (difficulty == 2) {
+      if (scores[0] <= 13) {
+        hit = true;
+      }
+    } else if (difficulty == 3) {
+      let counter = 0;
+      let i = 0;
+      while (i < deck.length) {
+        let current = convertScore(deck[i]);
+        if (current == 11) {
+          current = 1;
+        }
+        if ((scores[0] + current) <= 21) {
+          counter++;
+        } 
+        i++;
+      }
+      console.log(counter/deck.length);
+      if ((counter / deck.length) > 0.5) {
+        hit = true;
+      }
+    } else {
+      let counter = 0;
+      let i = 0;
+      while (i < 3) {
+        let current = convertScore(deck[i]);
+        if (current == 11) {
+          current = 1;
+        }
+        if ((scores[0] + current) <= 21) {
+          counter++;
+        } 
+        i++;
+      }
+      if (counter >= 2) {
+        hit = true;
+      }
+    }
+    return hit;
   }
 
-  turnIndicator = () => {
-    if (this.state.playersTurn) {
-      return (
-        <View style={{alignSelf: 'center', position: 'absolute', bottom: 250}}>
-          <Text style={{color: 'yellow'}}>Player &#x2193; Turn</Text>
-        </View>
-      );
+  computerHit = () => {
+    let { card, computerSet } = this.state;
+    computerSet = this.computerDropCard(computerSet, card);
+    this.setState({
+      computerSet: computerSet,
+      hit: false,
+      computerTimer: 0,
+      playersTurn: true,
+    });
+  }
+
+  computerHandScores = () => {
+    let { computerSet} = this.state;
+    let scores = [];
+    let i = 0;
+    while (i < computerSet.length) {
+      let currentScore = getScore(computerSet[i]);
+      scores.push(currentScore);
+      // let j = 0;
+      // while (j < this.numberOfAces(computerSet[i])) {
+
+      //   j++;
+      // }
+      //////////////////////
+      i++;
+    } 
+    scores.sort((a, b) => a - b);
+    return scores;
+  }
+
+  computerHitOrStay = () => {
+    let scores = this.computerHandScores();
+    if (this.state.computerTimer == TIMERLENGTH - 2) {
+      if (this.computerShouldHit(scores)) {
+        this.addCard();
+      } else {
+        this.stay();
+      } 
     } else {
-      return (
-        <View style={{alignSelf: 'center', position: 'absolute', top: 250}}>
-          <Text style={{color: 'yellow'}}>Computer &#x2191; Turn</Text>
-        </View>
-      );
+      this.computerHit();
     }
   }
+
+  computerDropCard = (set, card) => {
+    let cardValue = convertScore(card);
+    let best = -100;
+    let index = 0;
+    let i = 0;
+    while (i < set.length) {
+      // TODO: IF GETSCORE() SCORE IS 11 i.e. an ACE
+      let score = 21 - getScore(set[i]) - cardValue;
+      if ((best < 0 && score > best) || (best > 0 && score > 0 && score < best)) {
+        best = score;
+        index = i;
+      }
+      i++;
+    }
+    set[index].push(card)
+    return set;
+  }
+
+  computersTurn = () => {
+    if (this.state.computerTimer <= 0) {
+      clearInterval(this.computerTimer);
+    }
+    if (!this.state.playersTurn && this.props.players == 1) {
+      if (this.state.computerTimer == TIMERLENGTH) {
+        this.computerTimer = setInterval(
+          () => this.setState((prevState) => ({
+              computerTimer: prevState.computerTimer - 1,
+            })), 1000
+          );
+      } else if (this.state.computerTimer == TIMERLENGTH - 2) {
+        this.computerHitOrStay();
+      } else if (this.state.computerTimer == TIMERLENGTH - 4) {
+        this.computerHitOrStay();
+      }
+    }
+  }
+
+  numberOfAces = (hand) => {
+    let aces = 0;
+    if (hand.includes('sa')) {
+      aces++;
+    }
+    if (hand.includes('ca')) {
+      aces++;
+    }
+    if (hand.includes('ha')) {
+      aces++;
+    }
+    if (hand.includes('da')) {
+      aces++;
+    }
+    return aces;
+  }
+
+  //----------------------------------------------------------------//
   
   render() {
     let { playerSet, computerSet, playersTurn } = this.state;
@@ -454,24 +665,25 @@ export default class Game extends React.Component {
           pass={this.props.players == 2 ? this.state.pass : false}
         />
         <View style={styles.pannel}>
-          <View style={{width: '40%', flexDirection: 'row',}}>
+          <View style={{flex: 2, flexDirection: 'row'}}>
             <View style={styles.buttons}>
-              <TouchableOpacity onPress={() => {this.addCard(playerSet)}} disabled={this.playerBusted() || this.state.hit || (this.props.players == 2 ? false : !this.state.playersTurn)}>
+              <TouchableOpacity style={{width: '100%'}} onPress={() => {this.addCard(playerSet)}} disabled={this.playerBusted() || this.state.hit || (this.props.players == 2 ? false : !this.state.playersTurn)}>
                 <Text style={[styles.button, {backgroundColor: 'red', opacity: (this.playerBusted() || this.state.hit || (this.props.players == 2 ? false : !this.state.playersTurn)) ? 0.5 : 1}]}>Hit</Text>
               </TouchableOpacity> 
-              <TouchableOpacity onPress={() => {this.stay()}} disabled={this.state.hit}>
-                <Text style={[styles.button, {backgroundColor: 'blue', opacity: (this.state.hit) ? 0.5 : 1}]}>Stay</Text>
+              <TouchableOpacity style={{width: '100%'}} onPress={() => {this.stay()}} disabled={this.state.hit || (this.props.players == 2 ? false : !this.state.playersTurn)}>
+                <Text style={[styles.button, {backgroundColor: 'blue', opacity: (this.state.hit || (this.props.players == 2 ? false : !this.state.playersTurn)) ? 0.5 : 1}]}>Stay</Text>
               </TouchableOpacity> 
-              <TouchableOpacity onPress={() => {this.quit()}}>
+              <TouchableOpacity style={{width: '100%'}} onPress={() => {this.quit()}}>
                 <Text style={[styles.button, {backgroundColor: 'black'}]}>Quit</Text>
               </TouchableOpacity> 
             </View>
-            <View style={{justifyContent: 'center', alignItems: 'center',}}>
+            <View style={{flex: 0.5}} />
+            <View style={{flex: 4, justifyContent: 'center', alignItems: 'center',}}>
               <Image source={require('../assets/images/back.jpg')} />
             </View>
           </View>
-          <View style={{width: '20%'}}>
-            
+          <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+            {this.flipCard(this.state.card)}
           </View>
           <View style={styles.scoreboard}>
             <Text style={{height: '25%', color: 'white'}}>{`${(this.props.players == 1 ? 'Computer Score' : 'Player 2 Score')}: ${this.state.computerScore}`}</Text>
@@ -485,9 +697,7 @@ export default class Game extends React.Component {
           numHands={this.props.hands}
           pass={this.props.players == 2 ? this.state.pass : false}
         />
-        {/* {this.turnIndicator()} */}
-        {this.gameOver()}
-        {this.flipCard(this.state.card)}
+        {this.turnIndicator()}
         {this.passDevice()}
       </View>
     );
@@ -515,7 +725,6 @@ const styles = StyleSheet.create({
 		backgroundColor: 'green',
 		justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 18
 	},
 	  
 	pannel: {
@@ -524,9 +733,11 @@ const styles = StyleSheet.create({
 		width: '100%',
 		justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 10,
   },
 
   buttons: {
+    flex: 4,
 		flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
@@ -534,10 +745,25 @@ const styles = StyleSheet.create({
 
   scoreboard: {
 		flexDirection: 'column',
-    width: '40%',
+    flex: 2,
     justifyContent: 'center',
     alignItems: 'center',
     paddingTop: 35,
+  },
+
+  triangle: {
+    justifyContent: 'flex-end',
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderTopWidth: 45,
+    borderRightWidth: 70,
+    borderBottomWidth: 45,
+    borderLeftWidth: 70,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    //marginTop: 10,
   },
 
 });

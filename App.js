@@ -1,6 +1,7 @@
 import React from 'react';
-import { StyleSheet, Text, View, Button, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, Button, TouchableOpacity, Modal, TouchableHighlight, Alert } from 'react-native';
 import Game from './components/Game';
+import Instructions from './components/Instructions';
 
 export default class App extends React.Component {
   
@@ -11,6 +12,9 @@ export default class App extends React.Component {
       play: false,
       hands: 1,
       players: 1,
+      difficulty: 1,
+      modalVisible: false,
+      instruction: 0,
     };
   }
 
@@ -20,9 +24,16 @@ export default class App extends React.Component {
     });
   }
 
+  switchDifficulty = (num) => {
+    this.setState({
+      difficulty: num, 
+    });
+  }
+
   switchPlayers = (num) => {
     this.setState({
       players: num, 
+      difficulty: 1,
     });
   }
 
@@ -32,12 +43,33 @@ export default class App extends React.Component {
     });
   }
 
+  difficultyButtons = () => {
+    let { players, difficulty } = this.state;
+    if (players == 1) {
+      let difficulties = ['Easy', 'Medium', 'Hard', 'Expert'];
+      let buttons = difficulties.map((diff) => 
+        <TouchableOpacity onPress={() => {this.switchDifficulty(difficulties.indexOf(diff) + 1)}} disabled={difficulties.indexOf(diff) + 1 == difficulty} key={difficulties.indexOf(diff)}>
+          <Text style={[styles.button, {backgroundColor: 'black', opacity: difficulties.indexOf(diff) + 1 == difficulty ? 1 : 0.5}]}>{diff}</Text>
+        </TouchableOpacity> 
+      );
+      return buttons;
+    } else {
+      let difficulties = ['Local', 'Online', 'Wager'];
+      let buttons = difficulties.map((diff) => 
+        <TouchableOpacity onPress={() => {this.switchDifficulty(difficulties.indexOf(diff) + 1)}} disabled={difficulties.indexOf(diff) + 1 == difficulty} key={difficulties.indexOf(diff)}>
+          <Text style={[styles.button, {backgroundColor: 'black', opacity: difficulties.indexOf(diff) + 1 == difficulty ? 1 : 0.5}]}>{diff}</Text>
+        </TouchableOpacity> 
+      );
+      return buttons;
+    }
+  }
+
   playerButtons = () => {
     let { players } = this.state;
-    let player = ['1 Player', '2 Player'];
+    let player = ['Single', 'Multi'];
     let buttons = player.map((play) => 
       <TouchableOpacity onPress={() => {this.switchPlayers(player.indexOf(play) + 1)}} disabled={player.indexOf(play) + 1 == players} key={player.indexOf(play)}>
-        <Text style={[styles.button, {backgroundColor: 'black', opacity: player.indexOf(play) + 1 == players ? 1 : 0.5}]}>{play}</Text>
+        <Text style={[styles.button, {backgroundColor: 'red', opacity: player.indexOf(play) + 1 == players ? 1 : 0.5}]}>{play}</Text>
       </TouchableOpacity> 
     );
     return buttons;
@@ -48,7 +80,7 @@ export default class App extends React.Component {
     let modes = ['BlackJack', 'DoubleJack', 'TripleJack', 'QuadJack'];
     let buttons = modes.map((mode) => 
       <TouchableOpacity onPress={() => {this.switchMode(modes.indexOf(mode) + 1)}} disabled={modes.indexOf(mode) + 1 == hands} key={modes.indexOf(mode)}>
-        <Text style={[styles.button, {backgroundColor: 'red', opacity: modes.indexOf(mode) + 1 == hands ? 1 : 0.5}]}>{mode}</Text>
+        <Text style={[styles.button, {backgroundColor: 'black', opacity: modes.indexOf(mode) + 1 == hands ? 1 : 0.5}]}>{mode}</Text>
       </TouchableOpacity> 
     );
     return buttons;
@@ -66,6 +98,7 @@ export default class App extends React.Component {
         <Game 
           hands={this.state.hands}
           players={this.state.players}
+          difficulty={this.state.difficulty}
           quit={() => this.quit()}
         />
       );
@@ -78,6 +111,9 @@ export default class App extends React.Component {
               <Text style={{color: 'black'}}>Multi</Text>
               <Text style={{color: 'red'}}>Jack</Text>
             </Text>
+            <TouchableOpacity onPress={() => {this.setModalVisible(true);}}>
+              <Text style={[styles.button, {backgroundColor: 'blue'}]}>i</Text>
+            </TouchableOpacity>
           </View>
           
           <View style={styles.buttonGroup}>
@@ -86,10 +122,11 @@ export default class App extends React.Component {
             </View>
 
             <View style={{flex: 1}}>
+              {this.playerButtons()}
             </View>
 
             <View style={{flex: 1, justifyContent: 'flex-end'}}>
-              {this.playerButtons()}
+              {this.difficultyButtons()}
             </View>
           </View>
 
@@ -109,10 +146,19 @@ export default class App extends React.Component {
       );
     }
   }
+
+  setModalVisible(visible) {
+    this.setState({modalVisible: visible});
+  }
+
   
   render() {
     return (
       <View style={styles.container}>
+        <Instructions
+          visible={this.state.modalVisible}
+          close={() => this.setModalVisible(false)}
+        />
         {this.display()}
       </View> 
     );
