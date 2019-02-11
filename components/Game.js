@@ -55,6 +55,7 @@ export default class Game extends React.Component {
       lastRoundScore: 0,
       hit: false,
       stay: false,
+      autoStay: false,
       playersTurn: playersTurn,
       stayCounter: 0,
       pass: true,
@@ -68,7 +69,7 @@ export default class Game extends React.Component {
 
   componentDidMount() {
     this.mounted = true;
-    if (this.state.playersTurn && this.props.hands == 1 && this.props.players == 1) {
+    if ((this.state.playersTurn && this.props.hands == 1 && this.props.players == 1) || this.state.autoStay) {
       this.automatePlayer();
     }
     if (this.props.players == 1) {
@@ -78,7 +79,7 @@ export default class Game extends React.Component {
 
   componentDidUpdate() {
     this.gameOver();
-    if (this.state.playersTurn && this.props.hands == 1 && this.props.players == 1) {
+    if ((this.state.playersTurn && this.props.hands == 1 && this.props.players == 1) || this.state.autoStay) {
       this.automatePlayer();
     }
     if (this.props.players == 1) {
@@ -99,6 +100,7 @@ export default class Game extends React.Component {
     let hit = true;
     let computerTimer = TIMERLENGTH;
     let card = deck.pop();
+    console.log(card);
     if (this.props.hands == 1 && players == 1) {
       if (playersTurn) {
         playerSet[0].push(card);
@@ -225,6 +227,7 @@ export default class Game extends React.Component {
       lastRoundScore: 0,
       hit: false,
       stay: false,
+      autoStay: false,
       playersTurn: playersTurn,
       stayCounter: 0,
       pass: true,
@@ -407,7 +410,7 @@ export default class Game extends React.Component {
   // Player methods
 
   automatePlayer = () => {
-    if (getScore(this.state.playerSet[0]) >= 21) {
+    if ((getScore(this.state.playerSet[0]) >= 21) || this.state.autoStay) {
       this.stay();
     }
   }
@@ -498,7 +501,7 @@ export default class Game extends React.Component {
   //----------------------------------------------------------------//
   // Computer methods
 
-  computerShouldHit = (scores) => {
+  computerShouldHit = (lowest) => {
     let { deck } = this.state;
     let { difficulty } = this.props;
     let hit = false;
@@ -507,10 +510,6 @@ export default class Game extends React.Component {
         hit = true;
       }
     } else if (difficulty == 2) {
-      if (scores[0] <= 13) {
-        hit = true;
-      }
-    } else if (difficulty == 3) {
       let counter = 0;
       let i = 0;
       while (i < deck.length) {
@@ -518,7 +517,7 @@ export default class Game extends React.Component {
         if (current == 11) {
           current = 1;
         }
-        if ((scores[0] + current) <= 21) {
+        if ((lowest + current) <= 21) {
           counter++;
         } 
         i++;
@@ -527,22 +526,19 @@ export default class Game extends React.Component {
       if ((counter / deck.length) > 0.5) {
         hit = true;
       }
-    } else {
-      let counter = 0;
-      let i = 0;
-      while (i < 3) {
-        let current = convertScore(deck[i]);
-        if (current == 11) {
-          current = 1;
-        }
-        if ((scores[0] + current) <= 21) {
-          counter++;
-        } 
-        i++;
-      }
-      if (counter >= 2) {
+    } else if (difficulty == 3) {
+      if (lowest <= 13) {
         hit = true;
       }
+    } else {
+      console.log(deck[deck.length - 1]);
+      let current = convertScore(deck[deck.length - 1]);
+      if (current == 11) {
+        current = 1;
+      }
+      if ((lowest + current) <= 21) {
+        hit = true;
+      } 
     }
     return hit;
   }
@@ -563,14 +559,23 @@ export default class Game extends React.Component {
     let scores = [];
     let i = 0;
     while (i < computerSet.length) {
-      let currentScore = getScore(computerSet[i]);
+      let hand = computerSet[i];
+      let aces = this.numberOfAces(hand);
+      let currentScore = getScore(hand);
       scores.push(currentScore);
-      // let j = 0;
-      // while (j < this.numberOfAces(computerSet[i])) {
-
-      //   j++;
-      // }
-      //////////////////////
+      if (aces > 0) {
+        let altScore = 0;
+        let j = 0;
+        while (j < hand.length) {
+          let value = convertScore(hand[j]);
+          if (value == 11) {
+            value = 1;
+          }
+          altScore += value;
+          j++
+        }
+        scores.push(altScore);
+      }
       i++;
     } 
     scores.sort((a, b) => a - b);
@@ -580,7 +585,7 @@ export default class Game extends React.Component {
   computerHitOrStay = () => {
     let scores = this.computerHandScores();
     if (this.state.computerTimer == TIMERLENGTH - 2) {
-      if (this.computerShouldHit(scores)) {
+      if (this.computerShouldHit(scores[0])) {
         this.addCard();
       } else {
         this.stay();
@@ -591,13 +596,16 @@ export default class Game extends React.Component {
   }
 
   computerDropCard = (set, card) => {
-    let cardValue = convertScore(card);
+    let hand = [];
     let best = -100;
     let index = 0;
     let i = 0;
     while (i < set.length) {
-      // TODO: IF GETSCORE() SCORE IS 11 i.e. an ACE
-      let score = 21 - getScore(set[i]) - cardValue;
+      // TODO: Which bust to take (22 vs 25 vs 30)
+      hand = set[i];
+      hand.push(card);
+      let score = 21 - getScore(hand);
+      hand.pop();
       if ((best < 0 && score > best) || (best > 0 && score > 0 && score < best)) {
         best = score;
         index = i;
