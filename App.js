@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, Button, TouchableOpacity, Modal, TouchableHighlight, Alert } from 'react-native';
+import { StyleSheet, Text, View, Button, TouchableOpacity, Modal, TouchableHighlight, Alert, TouchableWithoutFeedback, ScrollView } from 'react-native';
 import Game from './components/Game';
 import Instructions from './components/Instructions';
 
@@ -10,10 +10,11 @@ export default class App extends React.Component {
 
 		this.state = {
       play: false,
-      hands: 1,
+      hands: 4,
       players: 1,
       difficulty: 1,
       modalVisible: false,
+      comingModalVisible: false,
       instruction: 0,
     };
   }
@@ -43,6 +44,19 @@ export default class App extends React.Component {
     });
   }
 
+  closeComingSoonModal = () => {
+    this.setState({
+      comingModalVisible: false, 
+    });
+  }
+
+  comingSoon = () => {
+    setTimeout(() => {this.setState({comingModalVisible: false})}, 1500);
+    this.setState({
+      comingModalVisible: true, 
+    });
+  }
+
   difficultyButtons = () => {
     let { players, difficulty } = this.state;
     if (players == 1) {
@@ -54,10 +68,21 @@ export default class App extends React.Component {
       );
       return buttons;
     } else {
-      let difficulties = ['Local', 'Online', 'Wager'];
-      let buttons = difficulties.map((diff) => 
-        <TouchableOpacity onPress={() => {this.switchDifficulty(difficulties.indexOf(diff) + 1)}} disabled={difficulties.indexOf(diff) + 1 == difficulty} key={difficulties.indexOf(diff)}>
-          <Text style={[styles.button, {backgroundColor: 'black', opacity: difficulties.indexOf(diff) + 1 == difficulty ? 1 : 0.5}]}>{diff}</Text>
+      let difficulties = ['Local', 'Online'];
+      // let buttons = difficulties.map((diff) => 
+      //   <TouchableOpacity onPress={() => {this.switchDifficulty(difficulties.indexOf(diff) + 1)}} disabled={difficulties.indexOf(diff) + 1 == difficulty} key={difficulties.indexOf(diff)}>
+      //     <Text style={[styles.button, {backgroundColor: 'black', opacity: difficulties.indexOf(diff) + 1 == difficulty ? 1 : 0.5}]}>{diff}</Text>
+      //   </TouchableOpacity> 
+      // );
+      let buttons = [];
+      buttons.push(
+        <TouchableOpacity key={1}>
+          <Text style={[styles.button, {backgroundColor: 'black'}]}>Local</Text>
+        </TouchableOpacity> 
+      );
+      buttons.push(
+        <TouchableOpacity onPress={() => {this.comingSoon()}} key={2}>
+          <Text style={[styles.button, {backgroundColor: 'black', opacity: 0.5}]}>Online</Text>
         </TouchableOpacity> 
       );
       return buttons;
@@ -107,13 +132,10 @@ export default class App extends React.Component {
         <View style={styles.container}>
 
           <View style={{justifyContent: 'center', alignItems: 'center', flex: 1}}>
-            <Text style={{fontSize: 50, fontWeight: 'bold'}}>
+            <Text style={{fontSize: 80, fontWeight: 'bold', fontFamily: 'TimesNewRomanPS-BoldItalicMT'}}>
               <Text style={{color: 'black'}}>Multi</Text>
               <Text style={{color: 'red'}}>Jack</Text>
             </Text>
-            <TouchableOpacity onPress={() => {this.setModalVisible(true);}}>
-              <Text style={[styles.button, {backgroundColor: 'blue'}]}>i</Text>
-            </TouchableOpacity>
           </View>
           
           <View style={styles.buttonGroup}>
@@ -159,7 +181,18 @@ export default class App extends React.Component {
           visible={this.state.modalVisible}
           close={() => this.setModalVisible(false)}
         />
+        <Modal
+          animationType={'fade'}
+          transparent={true}
+          visible={this.state.comingModalVisible}>
+          <TouchableOpacity style={{flex: 1, width: '100%'}} onPress={() => this.setState({ comingModalVisible: false })}>
+            <Text style={{alignSelf: 'center', top: '30%', color: 'white', fontSize: 16}}>Mode Coming Soon</Text>
+          </TouchableOpacity>
+        </Modal>
         {this.display()}
+        <TouchableOpacity onPress={() => {this.setModalVisible(true)}} style={styles.instructions}>
+          <Text style={{color: 'white', fontSize: 16, fontWeight: 'bold'}}>i</Text>
+        </TouchableOpacity>
       </View> 
     );
   }
@@ -194,11 +227,20 @@ const styles = StyleSheet.create({
 		backgroundColor: 'green',
 		justifyContent: 'center',
     alignItems: 'center',
-	},
-
-  buttons: {
-    flex: 1,
-		flexDirection: 'row',
   },
+  
+  instructions: {
+    borderWidth: 1,
+    borderColor:'white',
+    alignItems:'center',
+    justifyContent:'center',
+    width: 30,
+    height: 30,
+    backgroundColor:'blue',
+    borderRadius: 100,
+    position: 'absolute',
+    right: '2%',
+    top: '3%'
+  }
 
 });

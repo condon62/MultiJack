@@ -32,7 +32,7 @@ export default class Card extends React.Component {
       onPanResponderRelease: (e, gesture) => {
         this.state.pan.flattenOffset();
         let dropArea = this.getDropArea(gesture);
-        if (dropArea <= this.props.hands && gesture.moveY < 700 && gesture.moveY > 500) {
+        if (dropArea <= this.props.hands && gesture.moveY > 500) {
           this.props.dropArea(dropArea);
         } else {
           Animated.spring(this.state.pan, {
@@ -74,20 +74,20 @@ export default class Card extends React.Component {
         if (this.props.score > 21 && (this.props.type == 'play' || this.props.endRound)) {
           return (
             <View>
-              <Image source={images[this.props.card]} style={{top: `${this.props.pos * 20}%`, opacity: 0.5}} />
+              <Image source={images[this.props.card]} style={{top: `${25 + this.props.pos * 20}%`, opacity: 0.5}} />
             </View>
           );
         } else {
           return (
             <View>
-              <Image source={images[this.props.card]} style={{top: `${this.props.pos * 20}%`}} />
+              <Image source={images[this.props.card]} style={{top: `${25 + this.props.pos * 20}%`}} />
             </View>
           );
         }
       } else {
         return (
           <View>
-            <Image source={require('../assets/images/back.jpg')} style={{top: `${this.props.pos * 20}%`,}} />
+            <Image source={require('../assets/images/back.jpg')} style={{top: `${25 + this.props.pos * 20}%`,}} />
           </View>
         );
       }

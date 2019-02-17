@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, Image, Button, Alert, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, Image, Button, Alert, TouchableOpacity, Modal } from 'react-native';
 import helpers from '../helpers';
 import images from '../assets/images/images.js';
 import Set from './Set';
@@ -61,6 +61,7 @@ export default class Game extends React.Component {
       pass: true,
       computerTimer: TIMERLENGTH,
       gameOver: false,
+      computerFeedbackVisible: false,
     };
   }
 
@@ -69,7 +70,7 @@ export default class Game extends React.Component {
 
   componentDidMount() {
     this.mounted = true;
-    if ((this.state.playersTurn && this.props.hands == 1 && this.props.players == 1) || this.state.autoStay) {
+    if ((this.state.playersTurn && this.props.players == 1) || this.state.autoStay) {
       this.automatePlayer();
     }
     if (this.props.players == 1) {
@@ -79,7 +80,7 @@ export default class Game extends React.Component {
 
   componentDidUpdate() {
     this.gameOver();
-    if ((this.state.playersTurn && this.props.hands == 1 && this.props.players == 1) || this.state.autoStay) {
+    if ((this.state.playersTurn && this.props.players == 1) || this.state.autoStay) {
       this.automatePlayer();
     }
     if (this.props.players == 1) {
@@ -106,11 +107,13 @@ export default class Game extends React.Component {
         playerSet[0].push(card);
       } else {
         computerSet[0].push(card);
+        this.computerFeedback();
       }
       playersTurn = !playersTurn;
       hit = false
     } else if (!playersTurn && players == 1) {
       computerTimer = 2;
+      this.computerFeedback();
     }
     this.setState({
       card: card,
@@ -128,7 +131,9 @@ export default class Game extends React.Component {
   flipCard = (card) => {
     if (this.state.hit) {
       let locked = false;
+      let pos = 0;
       if (!this.state.playersTurn && this.props.players == 1) {
+        pos = -1.25;
         locked = true;
       }
       return (
@@ -136,15 +141,13 @@ export default class Game extends React.Component {
           card={card}
           type={'play'} 
           dropArea={(zone) => this.cardDropped(zone)} 
-          pos={0} 
+          pos={pos} 
           locked={locked}
           hands={this.props.hands}
           zones={this.legalZones()}
           pass={this.props.players == 2 ? this.state.pass : false}
         />
       );
-    } else if (this.state.stay) {
-      return <Text style={{fontSize: 20, color: 'white', backgroundColor: 'blue'}}>STAY</Text>;
     } else {
       return null;
     }
@@ -236,14 +239,48 @@ export default class Game extends React.Component {
     });
   }
 
+  scoreboard = () => {
+    let { playersTurn } = this.state;
+    let scores = [];
+    if (playersTurn) {
+      scores.push(
+        <View style={{flex: 1, justifyContent: 'flex-end', padding: '4%'}} key={1}>
+          <Text style={{color: 'white', textAlign: 'left'}}>{(this.props.players == 1 ? 'Computer' : 'Player 2')}</Text>
+          <Text style={{color: 'white', textAlign: 'left'}}>{`Score: ${this.state.computerScore}`}</Text>
+        </View>
+      );
+      scores.push(
+        <View style={{flex: 1, padding: '4%'}} key={2}>
+          <Text style={{color: 'yellow', textAlign: 'left', fontSize: 20}}>{(this.props.players == 1 ? 'PLAYER' : 'PLAYER 1')}</Text>
+          <Text style={{color: 'white', textAlign: 'left'}}>{`Score: ${this.state.playerScore}`}</Text>
+        </View>
+      );
+    } else {
+      scores.push(
+        <View style={{flex: 1, justifyContent: 'flex-end', padding: '4%'}} key={1}>
+          <Text style={{color: 'yellow', textAlign: 'left', fontSize: 20}}>{(this.props.players == 1 ? 'COMPUTER' : 'PLAYER 2')}</Text>
+          <Text style={{color: 'white', textAlign: 'left'}}>{`Score: ${this.state.computerScore}`}</Text>
+        </View>
+      );
+      scores.push(
+        <View style={{flex: 1, padding: '4%'}} key={2}>
+          <Text style={{color: 'white', textAlign: 'left'}}>{(this.props.players == 1 ? 'Player' : 'Player 1')}</Text>
+          <Text style={{color: 'white', textAlign: 'left'}}>{`Score: ${this.state.playerScore}`}</Text>
+        </View>
+      );
+    }
+    return scores;
+  }
+
   stay = () => {
-    let { playersTurn, stayCounter, computerTimer, stay } = this.state;
+    let { playersTurn, stayCounter, computerTimer, stay, computerFeedbackVisible } = this.state;
     if (playersTurn) {
       computerTimer = TIMERLENGTH;
       stay = false;
     } else {
       computerTimer = 0;
       stay = true;
+      this.computerFeedback();
     }
     if (stayCounter == 1) { // End game
       this.setState({
@@ -357,60 +394,12 @@ export default class Game extends React.Component {
     clearInterval(this.computerTimer);
     this.props.quit();
   }
-
-  playerIndicator = () => {
-    if (this.props.players == 1) {
-      if (this.state.playersTurn) {
-        return (
-          <View style={{justifyContent: 'center', flex: 0.25}}>
-            <View style={[styles.triangle, {borderTopColor: 'blue', borderBottomColor: 'transparent'}]}/>
-          </View>
-          // <View style={{alignSelf: 'center', position: 'absolute', bottom: 250}}>
-          //   <Text style={{color: 'yellow', fontSize: 20}}>Player &#x2193; Turn</Text>
-          // </View>
-        );
-      }
-    }
-  }
-
-  computerIndicator = () => {
-    if (this.props.players == 1) {
-      if (!this.state.playersTurn) {
-        return (
-          <View style={{justifyContent: 'center', flex: 0.25}}>
-            <View style={[styles.triangle, {borderTopColor: 'transparent', borderBottomColor: 'blue' }]}/>
-          </View>
-          // <View style={{alignSelf: 'center', position: 'absolute', top: 250}}>
-          //   <Text style={{color: 'yellow', fontSize: 20}}>Computer &#x2191; Turn</Text>
-          // </View>
-        );
-      }
-    }
-  }
-
-  turnIndicator = () => {
-    if (this.props.players == 1) {
-      if (!this.state.playersTurn) {
-        return (
-          <View style={{alignSelf: 'center', position: 'absolute', top: '37%'}}>
-            <Text style={{color: 'yellow', fontSize: 20}}>Computer &#x2191; Turn</Text>
-          </View>
-        );
-      } else {
-        return (
-          <View style={{alignSelf: 'center', position: 'absolute', bottom: '37%'}}>
-            <Text style={{color: 'yellow', fontSize: 20}}>Player &#x2193; Turn</Text>
-          </View>
-        );
-      }
-    }
-  }
   
   //----------------------------------------------------------------//
   // Player methods
 
   automatePlayer = () => {
-    if ((getScore(this.state.playerSet[0]) >= 21) || this.state.autoStay) {
+    if ((this.playerBusted()) || this.state.autoStay) {
       this.stay();
     }
   }
@@ -480,7 +469,7 @@ export default class Game extends React.Component {
   }
 
   playerBusted = () => {
-    let busted = true
+    let busted = true;
     let { playerSet, computerSet, playersTurn } = this.state;
     let temp = [];
     if (!playersTurn && this.props.players == 2) {
@@ -652,6 +641,13 @@ export default class Game extends React.Component {
     return aces;
   }
 
+  computerFeedback = () => {
+    setTimeout(() => {this.setState({computerFeedbackVisible: false})}, 1500);
+    this.setState({
+      computerFeedbackVisible: true, 
+    });
+  }
+
   //----------------------------------------------------------------//
   
   render() {
@@ -664,6 +660,14 @@ export default class Game extends React.Component {
     }
     return (
       <View style={styles.container}>
+        <Modal
+          animationType={'fade'}
+          transparent={true}
+          visible={this.state.computerFeedbackVisible}>
+          <TouchableOpacity style={{flex: 1, width: '100%'}} onPress={() => this.setState({ computerFeedbackVisible: false })}>
+            <Text style={{alignSelf: 'center', top: '40%', color: 'white', fontSize: 16}}>{this.state.stay ? 'Stay' : 'Hit'}</Text>
+          </TouchableOpacity>
+        </Modal>
         <Set 
           set={computerSet} 
           type='comp'
@@ -687,15 +691,16 @@ export default class Game extends React.Component {
             </View>
             <View style={{flex: 0.5}} />
             <View style={{flex: 4, justifyContent: 'center', alignItems: 'center',}}>
-              <Image source={require('../assets/images/back.jpg')} />
+              <TouchableOpacity style={{width: '100%'}} onPress={() => {this.addCard(playerSet)}} disabled={this.playerBusted() || this.state.hit || (this.props.players == 2 ? false : !this.state.playersTurn)}>
+                <Image source={require('../assets/images/back.jpg')} />
+              </TouchableOpacity>
             </View>
           </View>
           <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
             {this.flipCard(this.state.card)}
           </View>
           <View style={styles.scoreboard}>
-            <Text style={{height: '25%', color: 'white'}}>{`${(this.props.players == 1 ? 'Computer Score' : 'Player 2 Score')}: ${this.state.computerScore}`}</Text>
-            <Text style={{height: '25%', color: 'white'}}>{`${(this.props.players == 1 ? 'Player Score' : 'Player 1 Score')}: ${this.state.playerScore}`}</Text>
+            {this.scoreboard()}
           </View>
         </View>
         <Set 
@@ -705,7 +710,6 @@ export default class Game extends React.Component {
           numHands={this.props.hands}
           pass={this.props.players == 2 ? this.state.pass : false}
         />
-        {this.turnIndicator()}
         {this.passDevice()}
       </View>
     );
@@ -755,8 +759,6 @@ const styles = StyleSheet.create({
 		flexDirection: 'column',
     flex: 2,
     justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 35,
   },
 
   triangle: {

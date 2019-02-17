@@ -38,13 +38,13 @@ export default class Hand extends React.Component {
     if ((this.props.endRound || this.props.type == 'play') && (!this.props.pass)) {
       if (score > 21) {
         return (
-          <Text style={{position: 'absolute', bottom:'0%', fontSize: 20}}>
-            <Text style={{position: 'absolute', bottom:'0%', color: 'white', opacity: 0.4, textDecorationLine: 'line-through'}}>{score}</Text> 
-            <Text style={{position: 'absolute', bottom:'0%', color: 'red'}}>(-10)</Text> 
+          <Text style={{position: 'absolute', top:'0%', fontSize: 20}}>
+            <Text style={{position: 'absolute', top:'0%', color: 'white', opacity: 0.4, textDecorationLine: 'line-through'}}>{score}</Text> 
+            <Text style={{position: 'absolute', top:'0%', color: 'red'}}>(-10)</Text> 
           </Text>
         );
       } else {
-        return <Text style={{position: 'absolute', bottom:'0%', color: 'white', fontSize: 20}}>{score}</Text>;
+        return <Text style={{position: 'absolute', top:'0%', color: 'white', fontSize: 20}}>{score}</Text>;
       }
     }
   }
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
   busted: {
     transform: [{ rotate: '45deg'}],
     position: 'absolute',
-    bottom:'60%',
+    bottom:'50%',
     fontSize: 20,
     color: 'white',
     backgroundColor: 'red'
