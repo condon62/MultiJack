@@ -2,6 +2,7 @@ import React from 'react';
 import {
   StyleSheet, Text, View, Image, Alert, TouchableOpacity, Modal
 } from 'react-native';
+import { AdMobInterstitial } from 'expo';
 import { convertScore, getScore } from '../helpers';
 // import helpers from '../helpers';
 import Set from './Set';
@@ -10,12 +11,29 @@ import Card from './Card';
 const BACK = require('../assets/images/back.jpg');
 
 const TIMERLENGTH = 5;
+//  const INTERID = 'ca-app-pub-1898056984576377/7283699049';
+const INTERID = 'ca-app-pub-1425926517331745/1141181467'; /////// Test ID
 
 export default class Game extends React.Component {
   mounted = false;
 
   constructor(props) {
     super(props);
+
+    AdMobInterstitial.setAdUnitID(INTERID);
+    AdMobInterstitial.setTestDeviceID('EMULATOR');
+    AdMobInterstitial.addEventListener('interstitialDidClose', () => { // Might need fixed for Android
+      const { gameOver } = this.state;
+      if (gameOver) {
+        this.quit();
+      } else {
+        this.initializeHands();
+      }
+    });
+
+    // AdMobInterstitial.addEventListener("adFailedToLoad", () => {
+    //   //logic if ad have failed to load
+    // });
 
     const { hands } = this.props;
 
@@ -48,6 +66,7 @@ export default class Game extends React.Component {
     const playersTurn = (Math.floor(Math.random() * 2) === 0);
 
     this.state = {
+      addCounter: 1,
       deck, // Remaining cards
       playerSet, // Set of player hands
       computerSet, // Set of computer hands
@@ -183,7 +202,7 @@ export default class Game extends React.Component {
         title,
         message,
         [
-          { Text: 'Home', onPress: () => this.quit() }
+          { Text: 'Home', onPress: () => this.openInterstitial() }
         ],
         { cancelable: false }
       );
@@ -192,6 +211,7 @@ export default class Game extends React.Component {
       });
     }
     if (computerScore >= 50 && !gameOver) {
+      this.openInterstitial();
       let title = 'Game Lost';
       let message = `Computer wins round by a score of ${lastRoundScore} and game with a score of ${computerScore}`;
       if (players === 2) {
@@ -202,7 +222,7 @@ export default class Game extends React.Component {
         title,
         message,
         [
-          { Text: 'Home', onPress: () => this.quit() }
+          { Text: 'Home', onPress: () => this.openInterstitial() }
         ],
         { cancelable: false }
       );
@@ -212,7 +232,20 @@ export default class Game extends React.Component {
     }
   }
 
+  endRound = () => {
+    const { addCounter } = this.state;
+    if (addCounter % 4 === 0) {
+      this.openInterstitial();
+    }
+  }
+
+  openInterstitial = async () => {
+    await AdMobInterstitial.requestAdAsync();
+    await AdMobInterstitial.showAdAsync();
+  };
+
   initializeHands = () => {
+    const { addCounter } = this.state;
     const { hands } = this.props;
 
     const updatedDeck = ['c2', 'd2', 'h2', 's2', 'c3', 'd3', 'h3', 's3', 'c4', 'd4', 'h4', 's4', 'c5', 'd5', 'h5', 's5',
@@ -243,6 +276,7 @@ export default class Game extends React.Component {
     const playersTurn = (Math.floor(Math.random() * 2) === 0);
 
     this.setState({
+      addCounter: addCounter + 1,
       deck: updatedDeck,
       playerSet,
       computerSet,
@@ -407,7 +441,7 @@ export default class Game extends React.Component {
         title,
         message,
         [
-          { Text: 'Next Round', onPress: () => this.initializeHands() }
+          { Text: 'Next Round', onPress: () => this.endRound() }
         ],
         { cancelable: false }
       );
@@ -741,9 +775,6 @@ export default class Game extends React.Component {
         <View style={styles.pannel}>
           <View style={{ flex: 2, flexDirection: 'row' }}>
             <View style={styles.buttons}>
-              {/* <TouchableOpacity style={{ width: '100%' }} onPress={() => { this.addCard(); }} disabled={this.playerBusted() || hit || (players === 2 ? false : !playersTurn)}>
-                <Text style={[styles.button, { backgroundColor: 'red', opacity: (this.playerBusted() || hit || (players === 2 ? false : !playersTurn)) ? 0.5 : 1 }]}>Hit</Text>
-              </TouchableOpacity> */}
               <TouchableOpacity style={{ width: '100%' }} onPress={() => { this.stay(); }} disabled={hit || (players === 2 ? false : !playersTurn)}>
                 <Text style={[styles.button, { backgroundColor: 'blue', opacity: (hit || (players === 2 ? false : !playersTurn)) ? 0.5 : 1 }]}>Stay</Text>
               </TouchableOpacity>

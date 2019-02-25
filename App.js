@@ -2,8 +2,13 @@ import React from 'react';
 import {
   StyleSheet, Text, View, TouchableOpacity, Modal
 } from 'react-native';
+import { AdMobBanner } from 'expo';
+// import { AdMobBanner } from 'react-native-admob';
 import Game from './components/Game';
 import Instructions from './components/Instructions';
+
+// const BANNERID = 'ca-app-pub-1898056984576377/4852799219';
+const BANNERID = 'ca-app-pub-1425926517331745/4139536433'; ////// Test ID
 
 export default class App extends React.Component {
   constructor() {
@@ -143,6 +148,11 @@ export default class App extends React.Component {
     });
   }
 
+  // openInterstitial = async () => {
+  //   await AdMobInterstitial.requestAdAsync();
+  //   await AdMobInterstitial.showAdAsync();
+  // };
+
   display = () => {
     const {
       play, hands, players, difficulty
@@ -182,15 +192,28 @@ export default class App extends React.Component {
             </View>
           </View>
 
-          <View style={{ flex: 1, flexDirection: 'column', justifyContent: 'center' }}>
-            <View style={{ flex: 1 }} />
+          <View style={{ flex: 2, flexDirection: 'column', justifyContent: 'center' }}>
             <View style={{ flex: 1 }}>
               <TouchableOpacity onPress={() => { this.startGame(); }}>
                 <Text style={[styles.button, { backgroundColor: 'blue' }]}>Start</Text>
               </TouchableOpacity>
             </View>
             <View style={{ flex: 1 }} />
+            {/* <View style={{flex: 1}}>
+              <Button
+                title="OPEN"
+                color="steelblue"
+                onPress={() => { this.openInterstitial(); }}
+              />
+            </View> */}
           </View>
+
+          <AdMobBanner
+            style={styles.bottomBanner}
+            bannerSize="smartBannerPortrait"
+            adUnitID={BANNERID} // Test ID, Replace with your-admob-unit-id
+            didFailToReceiveAdWithError={this.bannerError}
+          />
 
         </View>
       );
@@ -234,6 +257,10 @@ export default class App extends React.Component {
 }
 
 const styles = StyleSheet.create({
+  bottomBanner: {
+    position: 'absolute',
+    bottom: 30,
+  },
 
   button: {
     borderColor: 'white',
@@ -275,7 +302,7 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     position: 'absolute',
     right: '2%',
-    top: '3%'
+    top: '4%'
   }
 
 });
