@@ -10,7 +10,22 @@ Array.prototype.shuffle = function() {
   return this;
 }
 
-convertScore = (str) => {
+export function shuffle() {
+  let i = this.length;
+  let j;
+  let temp;
+  if (i === 0) return this;
+  while (i > 0) {
+    j = Math.floor(Math.random() * (i + 1));
+    temp = this[i];
+    this[i] = this[j];
+    this[j] = temp;
+    i -= 1;
+  }
+  return this;
+}
+
+export function convertScore(str) {
   let value = 0;
   switch (str.substring(1)) {
     case 'j':
@@ -26,17 +41,17 @@ convertScore = (str) => {
       value = 11;
       break;
     default:
-      value = parseInt(str.substring(1));
+      value = parseInt(str.substring(1), 10);
   }
   return value;
 }
 
-getScore = (hand) => {
+export function getScore(hand) {
   let score = 0;
   let i = 0;
   while (i < hand.length) {
-    score += this.convertScore(hand[i]);
-    i++;
+    score += convertScore(hand[i]);
+    i += 1;
   }
   if (hand.includes('sa') && score > 21) {
     score -= 10;

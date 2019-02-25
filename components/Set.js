@@ -1,9 +1,8 @@
 import React from 'react';
-import { StyleSheet, View, Image, Text } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Hand from './Hand';
 
 export default class Set extends React.Component {
-  
   constructor() {
     super();
     this.state = {
@@ -11,18 +10,21 @@ export default class Set extends React.Component {
   }
 
   getHands = () => {
-    let set = this.props.set.map((hand) => 
-      <Hand 
-        hand={this.props.set[this.props.set.indexOf(hand)]} 
-        type={this.props.type}
-        turnComplete={this.props.turnComplete}
-        index={this.props.set.indexOf(hand)}
-        endRound={this.props.endRound}
-        pass={this.props.pass}
-        key={this.props.set.indexOf(hand)}
+    const {
+      set, type, turnComplete, endRound, pass
+    } = this.props;
+    const hands = set.map(hand => (
+      <Hand
+        hand={set[set.indexOf(hand)]}
+        type={type}
+        turnComplete={turnComplete}
+        index={set.indexOf(hand)}
+        endRound={endRound}
+        pass={pass}
+        key={set.indexOf(hand)}
       />
-    );
-    return set;
+    ));
+    return hands;
   }
 
   render() {
@@ -36,7 +38,7 @@ export default class Set extends React.Component {
 
 const styles = StyleSheet.create({
   container: {
-		flex: 1,
+    flex: 1,
     width: '100%',
     flexDirection: 'row',
   },

@@ -1,58 +1,75 @@
 import React from 'react';
-import { StyleSheet, View, Image, Text } from 'react-native';
-import helpers from '../helpers';
-import images from '../assets/images/images.js';
+import { StyleSheet, View, Text } from 'react-native';
+import { getScore } from '../helpers';
 import Card from './Card';
 
 export default class Hand extends React.Component {
-  
-  constructor() {
-    super();
-    
-  }
 
   addCards = (score) => {
-    let hand = this.props.hand.map((card) => 
-      <Card 
-        card={card} 
-        type={this.props.type}
-        dropped={this.props.dropped} 
-        pos={this.props.hand.indexOf(card)} 
-        locked={true}
+    const {
+      hand, type, dropped, endRound, pass
+    } = this.props;
+    const locked = true;
+    const cards = hand.map(card => (
+      <Card
+        card={card}
+        type={type}
+        dropped={dropped}
+        pos={hand.indexOf(card)}
+        locked={locked}
         score={score}
-        endRound={this.props.endRound}
-        pass={this.props.pass}
-        key={this.props.hand.indexOf(card)} 
+        endRound={endRound}
+        pass={pass}
+        key={hand.indexOf(card)}
       />
-    );
-    return hand;
+    ));
+    return cards;
   }
 
   busted = (score) => {
-    if (!this.props.pass && score > 21 && (this.props.type == 'play' || this.props.endRound)) {
+    const { pass, type, endRound } = this.props;
+    if (!pass && score > 21 && (type === 'play' || endRound)) {
       return <Text style={styles.busted}>BUSTED</Text>;
     }
+    return null;
   }
 
   score = (score) => {
-    if ((this.props.endRound || this.props.type == 'play') && (!this.props.pass)) {
+    const { pass, type, endRound } = this.props;
+    if ((endRound || type === 'play') && (!pass)) {
+      let scoreBlock;
       if (score > 21) {
-        return (
-          <Text style={{position: 'absolute', top:'0%', fontSize: 20}}>
-            <Text style={{position: 'absolute', top:'0%', color: 'white', opacity: 0.4, textDecorationLine: 'line-through'}}>{score}</Text> 
-            <Text style={{position: 'absolute', top:'0%', color: 'red'}}>(-10)</Text> 
+        scoreBlock = (
+          <Text style={{ position: 'absolute', top: '0%', fontSize: 20 }}>
+            <Text style={{
+              position: 'absolute', top: '0%', color: 'white', opacity: 0.4, textDecorationLine: 'line-through'
+            }}
+            >
+              {score}
+            </Text>
+            <Text style={{ position: 'absolute', top: '0%', color: 'red' }}>(-10)</Text>
           </Text>
         );
       } else {
-        return <Text style={{position: 'absolute', top:'0%', color: 'white', fontSize: 20}}>{score}</Text>;
+        scoreBlock = (
+          <Text style={{
+            position: 'absolute', top: '0%', color: 'white', fontSize: 20
+          }}
+          >
+            {score}
+          </Text>
+        );
       }
+      return scoreBlock;
     }
+    return null;
   }
 
   render() {
-    score = getScore(this.props.hand);
+    const { hand } = this.props;
+    const score = getScore(hand);
     return (
-      <View style={styles.container}> 
+      <View style={styles.container}>
         {this.addCards(score)}
         {this.busted(score)}
         {this.score(score)}
@@ -63,18 +80,18 @@ export default class Hand extends React.Component {
 
 const styles = StyleSheet.create({
   container: {
-		flex: 1,
+    flex: 1,
     width: '100%',
     height: '100%',
     alignItems: 'center',
     justifyContent: 'flex-start',
     flexDirection: 'column',
   },
-  
+
   busted: {
-    transform: [{ rotate: '45deg'}],
+    transform: [{ rotate: '45deg' }],
     position: 'absolute',
-    bottom:'50%',
+    bottom: '50%',
     fontSize: 20,
     color: 'white',
     backgroundColor: 'red'
