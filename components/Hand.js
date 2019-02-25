@@ -47,7 +47,7 @@ export default class Hand extends React.Component {
             >
               {score}
             </Text>
-            <Text style={{ position: 'absolute', top: '0%', color: 'red' }}>(-10)</Text>
+            <Text style={{ position: 'absolute', top: '0%', color: 'red' }}>(0)</Text>
           </Text>
         );
       } else {

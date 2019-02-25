@@ -148,11 +148,6 @@ export default class App extends React.Component {
     });
   }
 
-  // openInterstitial = async () => {
-  //   await AdMobInterstitial.requestAdAsync();
-  //   await AdMobInterstitial.showAdAsync();
-  // };
-
   display = () => {
     const {
       play, hands, players, difficulty
@@ -199,13 +194,6 @@ export default class App extends React.Component {
               </TouchableOpacity>
             </View>
             <View style={{ flex: 1 }} />
-            {/* <View style={{flex: 1}}>
-              <Button
-                title="OPEN"
-                color="steelblue"
-                onPress={() => { this.openInterstitial(); }}
-              />
-            </View> */}
           </View>
 
           <AdMobBanner
@@ -226,10 +214,6 @@ export default class App extends React.Component {
     const transparent = true;
     return (
       <View style={styles.container}>
-        <Instructions
-          visible={modalVisible}
-          close={() => this.setModalVisible(false)}
-        />
         <Modal
           animationType="fade"
           transparent={transparent}
@@ -237,7 +221,7 @@ export default class App extends React.Component {
         >
           <TouchableOpacity style={{ flex: 1, width: '100%' }} onPress={() => this.setState({ comingModalVisible: false })}>
             <Text style={{
-              alignSelf: 'center', top: '30%', color: 'white', fontSize: 16
+              alignSelf: 'center', top: '25%', color: 'white', fontSize: 16
             }}
             >
               Mode Coming Soon
@@ -245,12 +229,20 @@ export default class App extends React.Component {
           </TouchableOpacity>
         </Modal>
         {this.display()}
-        <TouchableOpacity
-          onPress={() => { this.setModalVisible(true); }}
-          style={styles.instructions}
-        >
-          <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>i</Text>
-        </TouchableOpacity>
+        {!modalVisible ? (
+          <TouchableOpacity
+            onPress={() => { this.setModalVisible(true); }}
+            style={styles.instructions}
+            visible={false}
+            render={false}
+          >
+            <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>i</Text>
+          </TouchableOpacity>
+        ) : null}
+        <Instructions
+          visible={modalVisible}
+          close={() => this.setModalVisible(false)}
+        />
       </View>
     );
   }
@@ -259,7 +251,7 @@ export default class App extends React.Component {
 const styles = StyleSheet.create({
   bottomBanner: {
     position: 'absolute',
-    bottom: 30,
+    bottom: 0,
   },
 
   button: {
@@ -289,6 +281,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'green',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingTop: '12%'
   },
 
   instructions: {

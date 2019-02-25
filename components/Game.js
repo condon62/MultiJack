@@ -11,7 +11,7 @@ import Card from './Card';
 const BACK = require('../assets/images/back.jpg');
 
 const TIMERLENGTH = 5;
-//  const INTERID = 'ca-app-pub-1898056984576377/7283699049';
+// const INTERID = 'ca-app-pub-1898056984576377/7283699049';
 const INTERID = 'ca-app-pub-1425926517331745/1141181467'; /////// Test ID
 
 export default class Game extends React.Component {
@@ -234,8 +234,10 @@ export default class Game extends React.Component {
 
   endRound = () => {
     const { addCounter } = this.state;
-    if (addCounter % 4 === 0) {
+    if (addCounter % 99 === 0) {
       this.openInterstitial();
+    } else {
+      this.initializeHands();
     }
   }
 
@@ -757,10 +759,10 @@ export default class Game extends React.Component {
         >
           <TouchableOpacity style={{ flex: 1, width: '100%' }} onPress={() => this.setState({ computerFeedbackVisible: false })}>
             <Text style={{
-              alignSelf: 'center', top: '40%', color: 'white', fontSize: 16
+              alignSelf: 'center', top: '48%', color: 'white', fontSize: 25
             }}
             >
-              {stay ? 'Stay' : 'Hit'}
+              {stay ? 'Stay' : null}
             </Text>
           </TouchableOpacity>
         </Modal>
