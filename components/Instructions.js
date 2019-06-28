@@ -39,7 +39,13 @@ export default class Instructions extends React.Component {
       text.push(
         <View>
           <Text style={styles.title} key={1}>Overview</Text>
-          <Text style={styles.text}>MultiJack is a twist on the classic game of Blackjack.  The twist is that players have the option to have more than 1 hand (up to 4) at once.</Text>
+          <Text style={styles.text}>
+            <Text style={{ fontWeight: 'bold', fontFamily: 'TimesNewRomanPS-BoldItalicMT' }}>
+              <Text style={{ color: 'black' }}>Multi</Text>
+              <Text style={{ color: 'red' }}>Jack</Text>
+            </Text>
+            <Text> is a twist on the classic game of Blackjack.  The twist is that players have the option to have more than 1 hand (up to 4) at once.</Text>
+          </Text>
           <Text style={styles.subtitle}>1. Objective</Text>
           <Text style={styles.text}>Each player attempts to beat their opponent by getting a score as close to 21 as possible without going over on each of their hands.</Text>
           <Text style={styles.subtitle}>2. Setup</Text>
@@ -75,9 +81,15 @@ export default class Instructions extends React.Component {
       text.push(
         <View>
           <Text style={styles.title} key={4}>Modes</Text>
-          <Text style={styles.text}>MultiJack features 4 different playing modes.  Each mode features a different number of hands per player.</Text>
-          <Text style={styles.subtitle}>1. BlackJack</Text>
-          <Text style={styles.text}>Each player has 1 hand (Your classic blackjack rules).</Text>
+          <Text style={styles.text}>
+            <Text style={{ fontWeight: 'bold', fontFamily: 'TimesNewRomanPS-BoldItalicMT' }}>
+              <Text style={{ color: 'black' }}>Multi</Text>
+              <Text style={{ color: 'red' }}>Jack</Text>
+            </Text>
+            <Text> features 4 different playing modes.  Each mode features a different number of hands per player.</Text>
+          </Text>
+          <Text style={styles.subtitle}>1. SingleJack</Text>
+          <Text style={styles.text}>Each player has 1 hand (The classic).</Text>
           <Text style={styles.subtitle}>2. DoubleJack</Text>
           <Text style={styles.text}>Each player has 2 hands (Double the decisions).</Text>
           <Text style={styles.subtitle}>3. TripleJack</Text>
@@ -90,7 +102,13 @@ export default class Instructions extends React.Component {
       text.push(
         <View>
           <Text style={styles.title} key={5}>Players</Text>
-          <Text style={styles.text}>MultiJack supports capabilities for 1 and 2 players.</Text>
+          <Text style={styles.text}>
+            <Text style={{ fontWeight: 'bold', fontFamily: 'TimesNewRomanPS-BoldItalicMT' }}>
+              <Text style={{ color: 'black' }}>Multi</Text>
+              <Text style={{ color: 'red' }}>Jack</Text>
+            </Text>
+            <Text> supports capabilities for 1 and 2 players.</Text>
+          </Text>
           <Text style={styles.subtitle}>1. Single</Text>
           <Text style={styles.text}>Test your skills against a computer of varying difficulties.</Text>
           <Text style={styles.subtitle}>2. Multi</Text>
@@ -101,7 +119,13 @@ export default class Instructions extends React.Component {
       text.push(
         <View>
           <Text style={styles.title} key={6}>Difficulties</Text>
-          <Text style={styles.text}>MultiJack currently features the following 4 levels of computer difficulty:</Text>
+          <Text style={styles.text}>
+            <Text style={{ fontWeight: 'bold', fontFamily: 'TimesNewRomanPS-BoldItalicMT' }}>
+              <Text style={{ color: 'black' }}>Multi</Text>
+              <Text style={{ color: 'red' }}>Jack</Text>
+            </Text>
+            <Text> currently features the following 4 levels of computer difficulty:</Text>
+          </Text>
           <Text style={styles.subtitle}>1. Easy</Text>
           <Text style={styles.text}>An opponent with some questionable decisions.  A great place for beginners.</Text>
           <Text style={styles.subtitle}>2. Medium</Text>

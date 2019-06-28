@@ -234,7 +234,7 @@ export default class Game extends React.Component {
 
   endRound = () => {
     const { addCounter } = this.state;
-    if (addCounter % 99 === 0) {
+    if (addCounter % 4 === 0) {
       this.openInterstitial();
     } else {
       this.initializeHands();
@@ -576,7 +576,7 @@ export default class Game extends React.Component {
     const { difficulty } = this.props;
     let hit = false;
     if (difficulty === 1) {
-      if (Math.floor(Math.random() * 2) === 0) {
+      if (Math.floor(Math.random() * 2) === 0 && lowest < 21) {
         hit = true;
       }
     } else if (difficulty === 2) {

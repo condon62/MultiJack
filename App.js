@@ -129,7 +129,7 @@ export default class App extends React.Component {
 
   modeButtons = () => {
     const { hands } = this.state;
-    const modes = ['BlackJack', 'DoubleJack', 'TripleJack', 'QuadJack'];
+    const modes = ['SingleJack', 'DoubleJack', 'TripleJack', 'QuadJack'];
     const buttons = modes.map(mode => (
       <TouchableOpacity
         onPress={() => { this.switchMode(modes.indexOf(mode) + 1); }}
@@ -171,6 +171,7 @@ export default class App extends React.Component {
               <Text style={{ color: 'black' }}>Multi</Text>
               <Text style={{ color: 'red' }}>Jack</Text>
             </Text>
+            <Text style={{ fontSize: 25, color: 'white', fontFamily: 'TimesNewRomanPS-BoldItalicMT' }}>A Blackjack Twist</Text>
           </View>
 
           <View style={styles.buttonGroup}>
@@ -221,7 +222,7 @@ export default class App extends React.Component {
         >
           <TouchableOpacity style={{ flex: 1, width: '100%' }} onPress={() => this.setState({ comingModalVisible: false })}>
             <Text style={{
-              alignSelf: 'center', top: '25%', color: 'white', fontSize: 16
+              alignSelf: 'center', top: '80%', color: 'white', fontSize: 16
             }}
             >
               Mode Coming Soon
@@ -233,8 +234,6 @@ export default class App extends React.Component {
           <TouchableOpacity
             onPress={() => { this.setModalVisible(true); }}
             style={styles.instructions}
-            visible={false}
-            render={false}
           >
             <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>i</Text>
           </TouchableOpacity>
